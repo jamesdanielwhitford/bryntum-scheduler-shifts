@@ -3,9 +3,9 @@
 [Bryntum Scheduler](https://www.bryntum.com/products/scheduler/) is a fully customizable, responsive, high-performance JavaScript component that's built using ES6+ and Sass. It can easily be used with React, Vue, or Angular. In this tutorial, we'll connect and sync a Bryntum Scheduler to a Microsoft Teams. We'll do the following:
 
 - Create a JavaScript app that a user can log in to using their Microsoft 365 Developer Program account. 
-- Use Microsoft Graph to get the user's Microsoft Outlook Calendar events
-- Display the Microsoft Outlook Calendar events in a Bryntum Calendar. 
-- Sync event changes in the Bryntum Calendar with the user's Microsoft Outlook Calendar. 
+- Use Microsoft Graph to get the user's Microsoft Teams Shifts
+- Display the Microsoft Teams Shifts in a Bryntum Scheduler. 
+- Sync event changes in the Bryntum Scheduler with the user's Microsoft Teams. 
 
 
 
