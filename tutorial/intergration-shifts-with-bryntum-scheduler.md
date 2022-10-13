@@ -1,13 +1,11 @@
 # How to connect and sync Bryntum Scheduler to a Microsoft Teams 
 
-[Bryntum Scheduler](https://www.bryntum.com/products/scheduler/) is a fully customizable, responsive, high-performance JavaScript component that's built using ES6+ and Sass. It can easily be used with React, Vue, or Angular. In this tutorial, we'll connect and sync a Bryntum Scheduler to a Microsoft Teams. We'll do the following:
+[Bryntum Scheduler](https://www.bryntum.com/products/scheduler/) is a modern and high performance scheduling UI component built with pure Javascript. It can easily be used with React, Vue, or Angular. In this tutorial, we'll connect and sync a Bryntum Scheduler to Microsoft Teams. We'll do the following:
 
 - Create a JavaScript app that a user can log in to using their Microsoft 365 Developer Program account. 
 - Use Microsoft Graph to get the user's Microsoft Teams Shifts
 - Display the Microsoft Teams Shifts in a Bryntum Scheduler. 
 - Sync event changes in the Bryntum Scheduler with the user's Microsoft Teams. 
-
-
 
 ![Bryntum - Microsoft Outlook events sync](images/cover-image.png)
 
@@ -23,57 +21,56 @@ npm install
 
 Run the local dev server using `npm run dev` and you’ll see a blank page. The dev server is configured to run on `http://localhost:8080/` in the `vite.config.js` file. This will be needed for Microsoft 365 authentication later.
 
-Let’s create our Bryntum Calendar now.
+Let’s create our Bryntum Scheduler now.
 
-## Creating a calendar using Bryntum
+## Creating a scheduler using Bryntum
 
-We'll install the Bryntum Calendar component using npm. Follow the guide to installing the Bryntum Calendar component [here](https://www.bryntum.com/docs/calendar/guide/Calendar/quick-start/javascript-npm).
+We'll install the Bryntum Scheduler component using npm. Follow the guide to installing the Bryntum Scheduler component [here](https://www.bryntum.com/docs/scheduler/guide/Scheduler/quick-start/javascript-npm).
 
-The `style.css` file contains some basic styling for the calendar. We set the `<HTML>` and `<body>` elements to have a height of 100vh so that the Bryntum Calendar will take up the full height of the screen.
+Only follow step one
+npm init
+download
 
 Let’s import the Bryntum Calendar component and give it some basic configuration. In the `main.js` file add the following lines:
 
 ```js
-import { Calendar } from "@bryntum/calendar";
-import "@bryntum/calendar/calendar.stockholm.css";
+import { Scheduler } from './node_modules/@bryntum/scheduler/scheduler.module.js';
+import "@bryntum/scheduler/scheduler.stockholm.css";
 
-const startDate = new Date();
-const endDate = new Date();
-endDate.setHours(endDate.getHours() + 1);
-const startDateStr = startDate.toISOString().substring(0, 19);
-const endDateStr = endDate.toISOString().substring(0, 19);
+const dateNow = new Date();
+const dateNextWeek = new Date();
+dateNextWeek.setDate(dateNextWeek.getDate() + 7);
 
-const calendar = new Calendar({
-  appendTo: "calendar",
+const scheduler = new Scheduler({
+    appendTo : document.body,
 
-  resources: [
-    {
-      id: 1,
-      name: "Default Calendar",
-      eventColor: "green",
-    },
-  ],
-  events: [
-    {
-      id: 1,
-      name: "Meeting",
-      startDate: startDateStr,
-      endDate: endDateStr,
-      resourceId: 1,
-    },
-  ],
+    startDate : dateNow,
+    endDate   : dateNextWeek,
+    viewPreset : 'dayAndWeek',
+
+    resources : [
+        { id : 1, name : 'Dan Stevenson' },
+        { id : 2, name : 'Talisha Babin' }
+    ],
+
+    events : [
+        { resourceId : 1, startDate : dateNow, endDate : dateNextWeek },
+        { resourceId : 2, startDate : dateNow, endDate : dateNextWeek }
+    ],
+
+    columns : [
+        { text : 'Name', field : 'name', width : 160 }
+    ]
 });
 ```
 
+We imported the Bryntum Scheduler and the CSS for the Stockholm theme, which is one of five available themes. You can also create custom themes. You can read more about styling the scheduler [here](https://bryntum.com/docs/calendar/guide/Calendar/customization/styling). We created a new Bryntum Scheduler instance and passed a configuration object into it. We added the scheduler to the DOM as a child of the `<div>` element with an `id` of `"scheduler"`. 
 
-
-We imported the Bryntum Calendar and the CSS for the Stockholm theme, which is one of five available themes. You can also create custom themes. You can read more about styling the calendar [here](https://bryntum.com/docs/calendar/guide/Calendar/customization/styling). We created a new Bryntum Calendar instance and passed a configuration object into it. We added the calendar to the DOM as a child of the `<div>` element with an `id` of `"calendar"`. 
-
-We passed in data inline to populate the Calendar Resources and events stores for simplicity. You can learn more about working with data in the [Bryntum docs](https://www.bryntum.com/docs/calendar/guide/Calendar/data/project_data). We have a single resource, the `"Default Calendar"`. Within the calendar, there's one example `"Meeting"` event. If you run your dev server now, you'll see the event in the Bryntum Calendar:
+We passed in data inline to populate the Scheduler resources and events stores for simplicity. You can learn more about working with data in the [Bryntum docs](https://www.bryntum.com/docs/scheduler/guide/Scheduler/data/project_data). We have a resource for two individuals. Within the scheduler, there's an example `"shift"` event for each individual that runs for a week. If you run your dev server now, you'll see the events in the Bryntum Scheduler:
 
 ![Bryntum Calendar with example event](images/bryntum-calendar-initial.png)
 
-Now let's learn how to retrieve a list of calendar events from a user’s Microsoft Outlook Calendar using Microsoft Graph.
+Now let's learn how to retrieve a list of team shifts from a user’s Microsoft Teams using Microsoft Graph.
 
 ## Getting access to Microsoft Graph
 
@@ -115,12 +112,14 @@ Let's register a Microsoft 365 application by creating an application registrati
 
 4. Give your app a name, select the "Single tenant" option, select "Single page application" for the redirect URI, and enter http://localhost:8080 for the redirect URL. Then click the "Register" button.
 
+# Redo this screenshot
 ![Adzure AD setup - step 4](images/azure-ad-app-4.png)
 
 
 
 After registering your application, take note of the Application (client) ID and the Directory (tenant) ID, you'll need these to set up authentication for your web app later.
 
+# Redo this screenshot
 ![Adzure AD setup - step 5](images/azure-ad-app-5.png)
 
 
@@ -135,7 +134,7 @@ To get data using the Microsoft Graph REST API, our app needs to prove that we'r
 
 ![Auth flow diagram](images/auth-flow.png)
 
-First we'll create the variables and functions we need for authentication and retrieving calendar events from Microsoft Outlook Calendar. Then we'll add the Microsoft Authentication Library and Microsoft Graph SDK, which we'll need for authentication and using Microsoft Graph. 
+First we'll create the variables and functions we need for authentication and retrieving team shifts from Microsoft Teams. Then we'll add the Microsoft Authentication Library and Microsoft Graph SDK, which we'll need for authentication and using Microsoft Graph. 
 
 Create a file called `auth.js` in your project’s root directory and add the following code:
 
@@ -208,7 +207,7 @@ The `msalRequest` variable stores the current Microsoft Authentication Library r
 
 
 
-## Using Microsoft Graph to access a user's Outlook Calendar events for the next seven days
+## Using Microsoft Graph to access a user's Teams Shifts
 
 Create a file called `graph.js` in the project’s root directory and add the following code:
 
