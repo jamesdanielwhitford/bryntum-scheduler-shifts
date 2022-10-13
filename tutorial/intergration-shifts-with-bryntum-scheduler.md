@@ -214,27 +214,29 @@ Create a file called `graph.js` in the project’s root directory and add the fo
 ```js
 const userTimeZone = "Africa/Johannesburg";
 
+// Create an authentication provider
 const authProvider = {
-  getAccessToken: async () => {
-    // Call getToken in auth.js
-    return await getToken();
-  },
+    getAccessToken: async () => {
+        // Call getToken in auth.js
+        return await getToken();
+    }
 };
 // Initialize the Graph client
 const graphClient = MicrosoftGraph.Client.initWithMiddleware({ authProvider });
 
-async function getEvents() {
-  ensureScope("Calendars.read");
-  const dateNow = new Date();
-  const dateNextWeek = new Date();
-  dateNextWeek.setDate(dateNextWeek.getDate() + 7);
-  const query = `startDateTime=${dateNow.toISOString()}&endDateTime=${dateNextWeek.toISOString()}`;
-  return await graphClient
-    .api("/me/calendarView")
-    .query(query)
+
+async function getMembers() {
+    ensureScope("TeamMember.Read.All");
+    return await graphClient
+    .api('/teams/b35b8ba3-97e5-4f2e-803f-4926ac37a5ac/members')
+    .get();
+}
+
+async function getAllShifts() {
+    ensureScope("Schedule.Read.All");
+    return await graphClient
+    .api('/teams/b35b8ba3-97e5-4f2e-803f-4926ac37a5ac/schedule/shifts')
     .header("Prefer", `outlook.timezone="${userTimeZone}"`)
-    .select("subject,start,end")
-    .orderby(`Start/DateTime`)
     .get();
 }
 ```
@@ -243,7 +245,7 @@ async function getEvents() {
 
 We get the access token using the `getToken` method in the `auth.js` file. We then use the Microsoft Graph SDK (which we'll add later) to create a Microsoft Graph client that will handle Microsoft Graph API requests.
 
-The `getEvents` function retrieves the user's calendar events for the next seven days. We use the `ensureScope` function to specify the permissions needed to access the calendar event data. We then call the `"/me/calendarview"` endpoint using the `graphClient` API  method to get the data from Microsoft Graph. We create a `query` string and use the `query` method to get calendar events for the next seven days. The `header` method allows us to set our preferred time zone. Outlook Calendar event dates are stored using UTC. We need to set the time zone for the returned Outlook Calendar event start and end dates. This is done so that the correct event times are displayed in our Bryntum Calendar. Replace the value for the `userTimeZone` with the time zone value for your region. You can find the available strings [here](https://learn.microsoft.com/en-us/graph/api/resources/datetimetimezone?view=graph-rest-1.0).
+The `getAllShifts` function retrieves the user's team shifts. We use the `ensureScope` function to specify the permissions needed to access the team shifts data. We then call the `"/me/calendarview"` endpoint using the `graphClient` API  method to get the data from Microsoft Graph. We create a `query` string and use the `query` method to get calendar events for the next seven days. The `header` method allows us to set our preferred time zone. Outlook Calendar event dates are stored using UTC. We need to set the time zone for the returned Outlook Calendar event start and end dates. This is done so that the correct event times are displayed in our Bryntum Calendar. Replace the value for the `userTimeZone` with the time zone value for your region. You can find the available strings [here](https://learn.microsoft.com/en-us/graph/api/resources/datetimetimezone?view=graph-rest-1.0).
 
 We use the `select` method to select the properties in the results that our app will use. We only request the data that we need, which improves our app's performance.
 
@@ -258,26 +260,24 @@ Now let's add the user's Outlook Calendar events to our Bryntum Calendar.
 Let's add the Microsoft 365 sign in link and import the Microsoft Authentication Library and Microsoft Graph SDK. In the `index.html` file, replace the child elements of the `<body>` HTML element with the following elements:
 
 ```html
-    <main id="main-container" role="main" class="container">
-      <div id="content" style="display: none">
-        <div id="calendar"></div>
-      </div>
-      <a id="signin" href="#">
-        <img
-          src="./images/ms-symbollockup_signin_light.png"
-          alt="Sign in with Microsoft"
-        />
-      </a>
-    </main>
-    <script
-      src="https://alcdn.msauth.net/browser/2.1.0/js/msal-browser.min.js"
-      integrity="sha384-EmYPwkfj+VVmL1brMS1h6jUztl4QMS8Qq8xlZNgIT/luzg7MAzDVrRa2JxbNmk/e"
-      crossorigin="anonymous"
-    ></script>
-    <script src="https://cdn.jsdelivr.net/npm/@microsoft/microsoft-graph-client/lib/graph-js-sdk.js"></script>
-    <script src="auth.js"></script>
-    <script src="graph.js"></script>
-    <script type="module" src="main.js"></script>
+  <main id="main-container" role="main" class="container">
+    <div id="content" style="display: none">
+      <div id="scheduler"></div>
+    </div>
+    <a id="signin" href="#">
+      <img
+        src="./images/ms-symbollockup_signin_light.png"
+        alt="Sign in with Microsoft"
+      />
+    </a>
+  </main>
+  <script src="https://alcdn.msauth.net/browser/2.1.0/js/msal-browser.min.js"
+    integrity="sha384-EmYPwkfj+VVmL1brMS1h6jUztl4QMS8Qq8xlZNgIT/luzg7MAzDVrRa2JxbNmk/e"
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@microsoft/microsoft-graph-client/lib/graph-js-sdk.js"></script>
+  <script src="auth.js"></script>
+  <script src="graph.js"></script>
+  <script type = "module" src = "main.js"></script>
 ```
 
 
