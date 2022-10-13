@@ -150,8 +150,6 @@ const msalConfig = {
 }; 
 ```
 
-
-
 In the `msalConfig` variable, replace the value for `clientID` with the client ID that came with your Azure AD application and replace the `authority` value with your directory ID.
 
 The following code will check permissions, create a Microsoft Authentication Library client, log a user in, and get the authentication token. Add it to the bottom of the file.
